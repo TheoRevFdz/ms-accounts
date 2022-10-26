@@ -1,6 +1,7 @@
 package com.nttdata.bootcamp.msaccounts.interfaces;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.nttdata.bootcamp.msaccounts.model.Account;
 
@@ -19,4 +20,6 @@ public interface IAccountService {
     public List<Account> findAccountByNroDoc(String nroDoc);
 
     public List<Account> findAccountByNroDocAndTypeAccount(String nroDoc, String typeAccount);
+
+    public Optional<Account> findByNroAccount(String nroAccount);
 }

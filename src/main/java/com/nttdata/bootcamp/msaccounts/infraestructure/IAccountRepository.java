@@ -1,6 +1,7 @@
 package com.nttdata.bootcamp.msaccounts.infraestructure;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
@@ -12,4 +13,6 @@ public interface IAccountRepository extends MongoRepository<Account, String> {
     public List<Account> findByNroDoc(String nroDoc);
 
     public List<Account> findByNroDocAndTypeAccount(String nroDoc, String typeAccount);
+
+    public Optional<Account> findByNroAccount(String nroAccount);
 }

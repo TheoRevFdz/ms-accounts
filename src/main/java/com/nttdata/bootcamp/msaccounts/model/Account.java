@@ -21,6 +21,7 @@ public class Account {
     private String nroAccount;
     private String typeAccount;
     private Double contableBalance;
+    private Double amount;
     private String typeDoc;
     private String nroDoc;
     private Date regDate;
