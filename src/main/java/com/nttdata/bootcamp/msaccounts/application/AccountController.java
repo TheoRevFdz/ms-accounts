@@ -105,7 +105,11 @@ public class AccountController {
                 UUID uid = UUID.randomUUID();
                 account.setNroInterbakaryAccount(uid.toString());
             }
-            
+            if (account.getNroAccount() == null) {
+                UUID uid = UUID.randomUUID();
+                account.setNroAccount(uid.toString());
+            }
+
             if (account != null && account.getId() != null) {
                 Mono<Account> response = service.updateAccount(account);
                 return ResponseEntity.ok(response);
@@ -129,6 +133,15 @@ public class AccountController {
                     .body(Collections.singletonMap("message",
                             "Error en servidor al obetener la cuenta bancaria del cliente por número de documento."));
         }
+    }
+
+    @GetMapping("/{nroAccount}")
+    public ResponseEntity<?> findByNroAccount(@PathVariable String nroAccount) {
+        Optional<Account> optResp = service.findByNroAccount(nroAccount);
+        if (optResp.isPresent()) {
+            return ResponseEntity.ok().body(optResp.get());
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 
     @DeleteMapping("/{id}")

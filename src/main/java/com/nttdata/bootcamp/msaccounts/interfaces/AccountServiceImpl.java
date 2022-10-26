@@ -2,6 +2,7 @@ package com.nttdata.bootcamp.msaccounts.interfaces;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,11 @@ public class AccountServiceImpl implements IAccountService {
     @Override
     public List<Account> findAccountByNroDocAndTypeAccount(String nroDoc, String typeAccount) {
         return repository.findByNroDocAndTypeAccount(nroDoc, typeAccount);
+    }
+
+    @Override
+    public Optional<Account> findByNroAccount(String nroAccount) {
+        return repository.findByNroAccount(nroAccount);
     }
 
 }
