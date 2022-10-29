@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,9 +19,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 
+import com.nttdata.bootcamp.msaccounts.dto.AccountTransactionDTO;
 import com.nttdata.bootcamp.msaccounts.dto.CustomerDTO;
+import com.nttdata.bootcamp.msaccounts.enums.ActionTransaction;
 import com.nttdata.bootcamp.msaccounts.enums.CustomerTypes;
 import com.nttdata.bootcamp.msaccounts.interfaces.IAccountService;
+import com.nttdata.bootcamp.msaccounts.interfaces.IAccountTransactionService;
 import com.nttdata.bootcamp.msaccounts.interfaces.ICustomerService;
 import com.nttdata.bootcamp.msaccounts.model.Account;
 import com.nttdata.bootcamp.msaccounts.util.ValidatorUtil;
@@ -38,6 +42,9 @@ public class AccountController {
 
     @Autowired
     private ValidatorUtil validatorUtil;
+
+    @Autowired
+    private IAccountTransactionService transactionService;
 
     @PostMapping
     public ResponseEntity<?> createAccount(@RequestBody Account account) {
@@ -156,6 +163,26 @@ public class AccountController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.singletonMap("message", "Error en servidor al eliminar la cuenta bancaria."));
+        }
+    }
+
+    @Transactional
+    @PostMapping("/pagoDeTerceros")
+    public ResponseEntity<?> pagoDeTerceros(@RequestBody Account account) {
+        try {
+            service.updateAccount(account);
+            AccountTransactionDTO dtoTransaction = AccountTransactionDTO
+                    .builder()
+                    .nroAccount(account.getNroAccount())
+                    .detail(account.getDetailTransaction())
+                    .transactionAmount(account.getAmountTransaction())
+                    .build();
+            ResponseEntity<AccountTransactionDTO> result = transactionService.createTransactionByAction(dtoTransaction,
+                    ActionTransaction.retirement.toString());
+            return result;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("message", "Error en servidor al actualizar la cuenta bancaria."));
         }
     }
 }
