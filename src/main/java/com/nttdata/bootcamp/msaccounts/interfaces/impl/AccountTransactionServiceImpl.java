@@ -1,4 +1,4 @@
-package com.nttdata.bootcamp.msaccounts.interfaces;
+package com.nttdata.bootcamp.msaccounts.interfaces.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.nttdata.bootcamp.msaccounts.config.RestConfig;
 import com.nttdata.bootcamp.msaccounts.dto.AccountTransactionDTO;
+import com.nttdata.bootcamp.msaccounts.interfaces.IAccountTransactionService;
 
 @Service
 public class AccountTransactionServiceImpl implements IAccountTransactionService {

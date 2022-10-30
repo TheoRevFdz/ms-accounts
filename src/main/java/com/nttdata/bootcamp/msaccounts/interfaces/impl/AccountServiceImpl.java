@@ -1,4 +1,4 @@
-package com.nttdata.bootcamp.msaccounts.interfaces;
+package com.nttdata.bootcamp.msaccounts.interfaces.impl;
 
 import java.time.Duration;
 import java.util.List;
@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.nttdata.bootcamp.msaccounts.infraestructure.IAccountReactiveRepository;
 import com.nttdata.bootcamp.msaccounts.infraestructure.IAccountRepository;
+import com.nttdata.bootcamp.msaccounts.interfaces.IAccountService;
 import com.nttdata.bootcamp.msaccounts.model.Account;
 
 import reactor.core.publisher.Flux;
