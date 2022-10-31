@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +21,14 @@ public class CreditServiceImpl implements ICreditService {
     @Autowired
     private RestConfig rest;
 
+    @Value("${hostname}")
+    private String hostname;
+
     @Override
     public List<CreditDTO> findCreditsByNroDoc(String nroDoc) {
         Map<String, String> params = new HashMap<String, String>();
         params.put("nroDoc", nroDoc);
-        String uri = "http://localhost:8090/api/credits/nroDoc/{nroDoc}";
+        String uri = String.format("http://%s:8090/api/credits/nroDoc/{nroDoc}", hostname);
         ResponseEntity<List<CreditDTO>> response = rest.exchange(
                 uri,
                 HttpMethod.GET,
