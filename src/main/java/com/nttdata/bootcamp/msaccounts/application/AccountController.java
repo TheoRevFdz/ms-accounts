@@ -18,12 +18,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 
+import com.nttdata.bootcamp.msaccounts.dto.AccountTransactionDTO;
+
 import com.nttdata.bootcamp.msaccounts.dto.CustomerDTO;
+import com.nttdata.bootcamp.msaccounts.dto.ListAccountTransactionDTO;
 import com.nttdata.bootcamp.msaccounts.enums.CustomerTypes;
+
 import com.nttdata.bootcamp.msaccounts.interfaces.IAccountService;
+
 import com.nttdata.bootcamp.msaccounts.interfaces.ICustomerService;
 import com.nttdata.bootcamp.msaccounts.model.Account;
 import com.nttdata.bootcamp.msaccounts.util.ValidatorUtil;
+
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -38,6 +44,10 @@ public class AccountController {
 
     @Autowired
     private ValidatorUtil validatorUtil;
+
+   // @Autowired
+   // private IAccountTransaction serviceTransact;
+
 
     @PostMapping
     public ResponseEntity<?> createAccount(@RequestBody Account account) {
@@ -158,4 +168,53 @@ public class AccountController {
                     .body(Collections.singletonMap("message", "Error en servidor al eliminar la cuenta bancaria."));
         }
     }
+     ////////////////////////////////////
+     @GetMapping("/ClientProduc/{nroDoc}")
+     public Flux<Account> findByNroDocProduct(@PathVariable String nroDoc) {     
+        return service.findByNroDocProduct(nroDoc);        
+     }
+ 
+     /*@GetMapping("/ClientProducsI/{nroDoc}")
+     public Flux<Account> findByTypeAccounte(@PathVariable String nroDoc){//,@PathVariable String fec1,@PathVariable String fec2 ) {     
+        return service.findByTypeAccount(nroDoc);//,fec1,fec2);        
+     }
+*/
+     //pendiente
+    @GetMapping("/BalanceSumary/{nroDoc}")
+    public Flux<Account> findByNroDocAccount(@PathVariable String nroDoc) {
+       
+  
+
+            //final List<Account> response = service.findByNroDocAccount(nroDoc);
+           // Flux<Account> response = service.findByNroDocAccount(nroDoc);
+            
+           // Account account = response.getClass();
+
+           // System.out.println(response.);
+
+            //Flux<Account> result = Flux.fromIterable(response);
+            return service.findByNroDocAccount(nroDoc);
+       
+    }
+
+    @GetMapping("/TraerCuentas/{nroAccount}")
+    public ResponseEntity<?> TraerCuentas(@RequestBody AccountTransactionDTO ct) {
+
+    try {
+        ListAccountTransactionDTO optResp = service.findBynroAccount(ct.getNroAccount());
+
+        return ResponseEntity.ok().body(optResp);
+    } catch (Exception e) {
+       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+    
+   
+
+
+    }
+
+      
+    
+
+    
 }

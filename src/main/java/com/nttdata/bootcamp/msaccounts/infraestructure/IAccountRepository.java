@@ -10,9 +10,17 @@ import com.nttdata.bootcamp.msaccounts.model.Account;
 
 @Repository("IAccountRepository")
 public interface IAccountRepository extends MongoRepository<Account, String> {
-    public List<Account> findByNroDoc(String nroDoc);
+   // public List<Account> findByNroDoc(String nroDoc);
 
     public List<Account> findByNroDocAndTypeAccount(String nroDoc, String typeAccount);
 
     public Optional<Account> findByNroAccount(String nroAccount);
+
+
+    //public Optional<Account> findBynroDoc(String nroAccount);
+    public List<Account> findByNroDoc(String nroDoc);
+   
+    //public List<Account> findBynroDoc2(String nroDoc);
+   
+   // public List<Account> BalanceSumaryNroD( );
 }
