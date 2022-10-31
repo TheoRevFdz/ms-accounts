@@ -3,6 +3,7 @@ package com.nttdata.bootcamp.msaccounts.model;
 import java.util.Date;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.AllArgsConstructor;
@@ -20,10 +21,13 @@ public class Account {
     private String id;
     private String nroAccount;
     private String typeAccount;
-    private Double contableBalance;
     private Double amount;
     private String typeDoc;
     private String nroDoc;
     private Date regDate;
     private String nroInterbakaryAccount;
+    @Transient
+    private String detailTransaction;
+    @Transient
+    private Double amountTransaction;
 }

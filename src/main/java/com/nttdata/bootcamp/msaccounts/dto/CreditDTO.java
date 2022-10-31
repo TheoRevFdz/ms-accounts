@@ -13,16 +13,13 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccountTransactionDTO {
+public class CreditDTO {
     private String id;
-    private String nroAccount;
+    private String nroDoc;
+    private String nroCredit;
+    private Double creditLine;
+    private Double amountUsed;
     private String type;
-    private String detail;
-    private Double transactionAmount;
-    private Date transactionDate;
-    private Double comission;
-    private String method;
-    private String nroCard;
-    private Double before;
-    private Double transactionLater;
+    private Date dateReg;
+    private CreditCardDTO creditCard;
 }

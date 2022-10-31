@@ -1,14 +1,18 @@
 package com.nttdata.bootcamp.msaccounts.application;
 
 import java.math.BigInteger;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,21 +23,23 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 
 import com.nttdata.bootcamp.msaccounts.dto.AccountTransactionDTO;
-
+import com.nttdata.bootcamp.msaccounts.dto.CreditDTO;
 import com.nttdata.bootcamp.msaccounts.dto.CustomerDTO;
-import com.nttdata.bootcamp.msaccounts.dto.ListAccountTransactionDTO;
+import com.nttdata.bootcamp.msaccounts.enums.ActionTransaction;
 import com.nttdata.bootcamp.msaccounts.enums.CustomerTypes;
-
+import com.nttdata.bootcamp.msaccounts.enums.ProfileTypes;
 import com.nttdata.bootcamp.msaccounts.interfaces.IAccountService;
-
+import com.nttdata.bootcamp.msaccounts.interfaces.IAccountTransactionService;
+import com.nttdata.bootcamp.msaccounts.interfaces.ICreditService;
 import com.nttdata.bootcamp.msaccounts.interfaces.ICustomerService;
 import com.nttdata.bootcamp.msaccounts.model.Account;
 import com.nttdata.bootcamp.msaccounts.util.ValidatorUtil;
 
-
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @RestController
 public class AccountController {
     @Autowired
@@ -45,9 +51,11 @@ public class AccountController {
     @Autowired
     private ValidatorUtil validatorUtil;
 
-   // @Autowired
-   // private IAccountTransaction serviceTransact;
+    @Autowired
+    private IAccountTransactionService transactionService;
 
+    @Autowired
+    private ICreditService creditService;
 
     @PostMapping
     public ResponseEntity<?> createAccount(@RequestBody Account account) {
@@ -61,14 +69,22 @@ public class AccountController {
                 account.setNroAccount(uniqNroAccount);
                 UUID uid = UUID.randomUUID();
                 account.setNroInterbakaryAccount(uid.toString());
+                SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
+                account.setRegDate(fmt.parse(LocalDate.now().toString()));
+                account.setTypeDoc(existCustomer.get().getTypeDoc());
                 final Mono<Account> baccountMono = Mono.just(account);
 
                 if (dto.getTypePerson().equals(CustomerTypes.PERSONAL.toString())) {
                     ResponseEntity<?> valid = validatorUtil.validatePersonalAccount(account);
-                    return saveAccount(valid, baccountMono);
+                    return saveAccount(valid, baccountMono, dto);
                 } else {
+                    if (isNotValidPymeAccount(dto)) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(String.format(
+                                        "No cuenta con una tarjeta de credito asociada, para poder crear la cuenta."));
+                    }
                     ResponseEntity<?> valid = validatorUtil.validateEmpresarialAccount(account);
-                    return saveAccount(valid, baccountMono);
+                    return saveAccount(valid, baccountMono, dto);
                 }
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -85,12 +101,28 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.singletonMap("message", "Error al crear cuenta bancaria."));
         } catch (Exception e) {
+            log.info(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.singletonMap("message", "Error al crear cuenta bancaria."));
         }
     }
 
-    private ResponseEntity<?> saveAccount(ResponseEntity<?> valid, Mono<Account> baccountMono) {
+    private Boolean isNotValidPymeAccount(CustomerDTO customerDTO) {
+        if (customerDTO.getProfile().equals(ProfileTypes.PYME.toString())) {
+            List<CreditDTO> credits = creditService.findCreditsByNroDoc(customerDTO.getNroDoc());
+            if (credits.size() > 0) {
+                credits = credits.stream()
+                        .filter(c -> c.getCreditCard() == null)
+                        .collect(Collectors.toList());
+                return credits.size() > 0;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private ResponseEntity<?> saveAccount(ResponseEntity<?> valid, Mono<Account> baccountMono,
+            CustomerDTO customerDTO) {
         if (valid.getStatusCodeValue() == HttpStatus.OK.value()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(service.createAccount(baccountMono));
         }
@@ -168,53 +200,32 @@ public class AccountController {
                     .body(Collections.singletonMap("message", "Error en servidor al eliminar la cuenta bancaria."));
         }
     }
-     ////////////////////////////////////
-     @GetMapping("/ClientProduc/{nroDoc}")
-     public Flux<Account> findByNroDocProduct(@PathVariable String nroDoc) {     
-        return service.findByNroDocProduct(nroDoc);        
-     }
- 
-     /*@GetMapping("/ClientProducsI/{nroDoc}")
-     public Flux<Account> findByTypeAccounte(@PathVariable String nroDoc){//,@PathVariable String fec1,@PathVariable String fec2 ) {     
-        return service.findByTypeAccount(nroDoc);//,fec1,fec2);        
-     }
-*/
-     //pendiente
-    @GetMapping("/BalanceSumary/{nroDoc}")
-    public Flux<Account> findByNroDocAccount(@PathVariable String nroDoc) {
-       
-  
 
-            //final List<Account> response = service.findByNroDocAccount(nroDoc);
-           // Flux<Account> response = service.findByNroDocAccount(nroDoc);
-            
-           // Account account = response.getClass();
-
-           // System.out.println(response.);
-
-            //Flux<Account> result = Flux.fromIterable(response);
-            return service.findByNroDocAccount(nroDoc);
-       
+    @Transactional
+    @PostMapping("/pagoDeTerceros")
+    public ResponseEntity<?> pagoDeTerceros(@RequestBody Account account) {
+        try {
+            service.updateAccount(account);
+            AccountTransactionDTO dtoTransaction = AccountTransactionDTO
+                    .builder()
+                    .nroAccount(account.getNroAccount())
+                    .detail(account.getDetailTransaction())
+                    .transactionAmount(account.getAmountTransaction())
+                    .build();
+            ResponseEntity<AccountTransactionDTO> result = transactionService.createTransactionByAction(dtoTransaction,
+                    ActionTransaction.retirement.toString());
+            return result;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("message", "Error en servidor al actualizar la cuenta bancaria."));
+        }
     }
 
-    @GetMapping("/TraerCuentas/{nroAccount}")
-    public ResponseEntity<?> TraerCuentas(@RequestBody AccountTransactionDTO ct) {
-
-    try {
-        ListAccountTransactionDTO optResp = service.findBynroAccount(ct.getNroAccount());
-
-        return ResponseEntity.ok().body(optResp);
-    } catch (Exception e) {
-       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-    }
-    
-   
-
-
+    @GetMapping("/ClientProduc/{nroDoc}")
+    public Flux<Account> findByNroDocProduct(@PathVariable String nroDoc) {     
+       return service.findByNroDocProduct(nroDoc);        
     }
 
-      
-    
 
-    
+
 }
