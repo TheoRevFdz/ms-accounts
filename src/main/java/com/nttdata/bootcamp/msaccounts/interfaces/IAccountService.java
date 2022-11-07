@@ -1,7 +1,9 @@
 package com.nttdata.bootcamp.msaccounts.interfaces;
 
+import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
+
 
 import com.nttdata.bootcamp.msaccounts.model.Account;
 
@@ -22,4 +24,14 @@ public interface IAccountService {
     public List<Account> findAccountByNroDocAndTypeAccount(String nroDoc, String typeAccount);
 
     public Optional<Account> findByNroAccount(String nroAccount);
+
+    //LR
+    public Flux<Account> findAll(String nrDoc);
+    public List<Account> findAccountClientProducts(String nroDoc);
+    public List<Account> findByNroDocAndLevel(String nroDoc,String level) throws ParseException;
+
+   // public CreditListDTO findClientProducts(String nrDoc);
+
+   // public Flux<Account> findByNroDocAndfindByNroAccount(String NroDoc, String account);
+    
 }

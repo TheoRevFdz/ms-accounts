@@ -7,4 +7,5 @@ import com.nttdata.bootcamp.msaccounts.dto.CustomerDTO;
 
 public interface ICustomerService {
     public Optional<CustomerDTO> findCustomerByNroDoc(String nroDoc) throws ParseException;
+    
 }

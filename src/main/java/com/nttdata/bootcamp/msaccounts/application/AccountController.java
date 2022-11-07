@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,12 +20,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 
 import com.nttdata.bootcamp.msaccounts.dto.AccountTransactionDTO;
 import com.nttdata.bootcamp.msaccounts.dto.CreditDTO;
 import com.nttdata.bootcamp.msaccounts.dto.CustomerDTO;
+import com.nttdata.bootcamp.msaccounts.dto.ProductsDTO;
 import com.nttdata.bootcamp.msaccounts.enums.ActionTransaction;
 import com.nttdata.bootcamp.msaccounts.enums.CustomerTypes;
 import com.nttdata.bootcamp.msaccounts.enums.ProfileTypes;
@@ -35,12 +38,16 @@ import com.nttdata.bootcamp.msaccounts.interfaces.ICustomerService;
 import com.nttdata.bootcamp.msaccounts.model.Account;
 import com.nttdata.bootcamp.msaccounts.util.ValidatorUtil;
 
+
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
+// LR
+// @RequestMapping("/account")
+// FLR
 public class AccountController {
     @Autowired
     private IAccountService service;
@@ -63,20 +70,35 @@ public class AccountController {
             Optional<CustomerDTO> existCustomer = customerService.findCustomerByNroDoc(account.getNroDoc());
 
             if (existCustomer.isPresent()) {
-                String uniqNroAccount = String.format("%040d",
-                        new BigInteger(UUID.randomUUID().toString().replace("-", ""), 16));
+
+                 List<Account> existLevelMajor = service.findByNroDocAndLevel(account.getNroDoc(),"PRINCIPAL"); //LRJ
+                
+                 String uniqNroAccount = String.format("%040d",
+                 new BigInteger(UUID.randomUUID().toString().replace("-", ""), 16));
+              
                 CustomerDTO dto = existCustomer.get();
+
                 account.setNroAccount(uniqNroAccount);
                 UUID uid = UUID.randomUUID();
                 account.setNroInterbakaryAccount(uid.toString());
                 SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
                 account.setRegDate(fmt.parse(LocalDate.now().toString()));
                 account.setTypeDoc(existCustomer.get().getTypeDoc());
+                //LR
+                if (existLevelMajor.size()>0 ) {               
+                    account.setLevel("SECUNDARIA");
+                    System.out.println("SI existe PRINCIPAL");
+                } else {
+                    account.setLevel("PRINCIPAL");
+                    System.out.println("NO existe PRINCIPAL");
+                }
+                //FLR
                 final Mono<Account> baccountMono = Mono.just(account);
 
                 if (dto.getTypePerson().equals(CustomerTypes.PERSONAL.toString())) {
                     ResponseEntity<?> valid = validatorUtil.validatePersonalAccount(account);
                     return saveAccount(valid, baccountMono, dto);
+
                 } else {
                     if (isNotValidPymeAccount(dto)) {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -221,11 +243,33 @@ public class AccountController {
         }
     }
 
-    @GetMapping("/ClientProduc/{nroDoc}")
-    public Flux<Account> findByNroDocProduct(@PathVariable String nroDoc) {     
-       return service.findByNroDocProduct(nroDoc);        
+    // LR
+    @GetMapping("/ClientProducts/{nrDoc}")
+    public Mono<ResponseEntity<Flux<Account>>> ClientProducts(@PathVariable String nrDoc) {
+        return Mono.just(ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(service.findAll(nrDoc))
+
+        );
     }
 
+    @GetMapping("/ClientProducts2/{nroDoc}")
+    public Mono<ResponseEntity<?>> ClientProducts2(@PathVariable String nroDoc) {
 
+        List<Account> accounts = service.findAccountClientProducts(nroDoc);
+
+        List<CreditDTO> credits = creditService.findCreditsByNroDoc(nroDoc);
+
+        ProductsDTO product = ProductsDTO.builder()
+                .NroDoc(nroDoc)
+                .accounts(accounts)
+                .credits(credits)
+                .build();
+
+        return Mono.just(ResponseEntity.ok().body(Mono.just(product)));
+        
+    }
+
+    // FLR
 
 }

@@ -18,7 +18,7 @@ import lombok.Setter;
 public class DebitCard {
     @Id
     private String nroCard;
-    private String nroAccount;
+    private String nroAccount; //eliminar
     private Date expireDate;
     private String cvc;
     private Boolean isEnabled;

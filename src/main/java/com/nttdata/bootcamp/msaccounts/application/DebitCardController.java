@@ -35,8 +35,8 @@ public class DebitCardController {
     @PostMapping("/assign_debitCard")
     public Mono<ResponseEntity<?>> assignCardToAccount(@RequestBody DebitCard debitCard) {
         try {
-            Optional<Account> optAccount = accountService.findByNroAccount(debitCard.getNroAccount());
-            if (optAccount.isPresent()) {
+            Optional<Account> optAccount = accountService.findByNroAccount(debitCard.getNroAccount());//eliminar
+            if (optAccount.isPresent()) { //elimi
                 SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
                 Date expireDate = DateUtils.addYears(fmt.parse(LocalDate.now().toString()), 3);
                 debitCard.setIsEnabled(true);
@@ -45,9 +45,9 @@ public class DebitCardController {
                 debitCard.setCvc(String.valueOf(cvc));
                 DebitCard resp = service.assignCardToAccount(debitCard);
                 return Mono.just(ResponseEntity.status(HttpStatus.CREATED).body(resp));
-            }
-            return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(String.format("No se encontró cuenta con Nro: %s", debitCard.getNroAccount())));
+           } //eliminar
+            return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND) //eliminar
+                    .body(String.format("No se encontró cuenta con Nro: %s", debitCard.getNroAccount()))); //elimina
         } catch (Exception e) {
             return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(e.getMessage()));

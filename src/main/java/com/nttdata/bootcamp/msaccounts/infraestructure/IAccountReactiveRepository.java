@@ -9,5 +9,12 @@ import reactor.core.publisher.Flux;
 
 @Repository
 public interface IAccountReactiveRepository extends ReactiveMongoRepository<Account, String> {
-    public Flux<Account> findByNroDoc(String nroDoc);
+public Flux<Account> findByNroDoc(String nroDoc);
+
+//public Flux<Account> findByNroDocAndfindByNroAccount(String nroDoc,String nroAccount);  
+      // Flux<Account> listar();
+
+   
+
+   // public Flux<Account> FindBy
 }

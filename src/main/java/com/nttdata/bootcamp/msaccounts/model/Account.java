@@ -30,4 +30,6 @@ public class Account {
     private String detailTransaction;
     @Transient
     private Double amountTransaction;
+    private String nroCard;
+    private String level;
 }

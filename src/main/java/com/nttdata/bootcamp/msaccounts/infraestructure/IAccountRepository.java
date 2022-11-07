@@ -15,4 +15,11 @@ public interface IAccountRepository extends MongoRepository<Account, String> {
     public List<Account> findByNroDocAndTypeAccount(String nroDoc, String typeAccount);
 
     public Optional<Account> findByNroAccount(String nroAccount);
+
+    //LR
+    public List<Account> findByNroDocAndLevel(String nroDoc,String level);
+    //FLR
+
+
+    
 }
