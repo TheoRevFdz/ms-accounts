@@ -1,6 +1,8 @@
 package com.nttdata.bootcamp.msaccounts;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,18 @@ class MsAccountApplicationTests {
 			
 			Assertions.assertThat(accounts.size()>0).isTrue();
 		});
+	}
+	
+	@Test
+	public void getByAccount() {
+		Map<String, String>params= Collections.singletonMap("nroAccount", "0201017455548278832770428400871002639623");
+		client.get()
+		.uri("/{nroAccount}",params)
+		.accept(MediaType.APPLICATION_JSON)
+		.exchange()
+		.expectStatus().isOk()
+		.expectHeader().contentType(MediaType.APPLICATION_JSON)
+		.expectBody(Account.class);
 	}
 
 }
